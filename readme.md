@@ -11,9 +11,6 @@ composer update
 ```
 4) Run migration: 
 ```
-php artisan migrate:install
-```
-```
 php artisan migrate
 ```
 Now you can go to the index page of application, but for full working you need to install Receiver API,
