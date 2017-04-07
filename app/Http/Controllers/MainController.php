@@ -7,9 +7,12 @@ use Illuminate\Http\Request;
 class MainController extends Controller
 {
     /**
-     * Create a new controller instance.
-     *
-     * @return void
+     * Getting request from Sender API, response validating, checking user authorization,
+     * decrypting of file structure, saving to DB and sending response in JSON 
+     * with success or failure message
+     * 
+     * @param  object $request Request object 
+     * @return json_string
      */
     public function json(Request $request)
     {

@@ -13,20 +13,11 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     use Authenticatable, Authorizable;
 
     protected $table = 'users';
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+    
     protected $fillable = [
         'username', 'password',
     ];
 
-    /**
-     * The attributes excluded from the model's JSON form.
-     *
-     * @var array
-     */
     protected $hidden = [
         'password',
     ];
@@ -35,12 +26,17 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return [
             'username' => 'required|alpha_dash',
-            'password' => 'required',
-            //'password' => 'required|min:8',
+            'password' => 'required|min:8',
             'json'     => 'required|json'
         ];
     }
 
+    /**
+     * Authorization of user. Return success or error message.
+     * 
+     * @param  object  $request Request object
+     * @return array            Array with success or error message
+     */
     public static function authorization($request)
     {
         $user = User::where( 
@@ -54,10 +50,11 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
             return ['error' => 'Authorization failed!'];            
         } else {                
             if(is_null($request->get('filename'))) $request->merge(['filename' => 'file.zip']);
+            $json = Temp::decrypt($request->get('json'), $request->get('options'));
             History::create([
                 'user_id'  => $user->id,
                 'filename' => $request->get('filename'),
-                'structure'=> $request->get('json'),
+                'structure'=> $json,
             ]);
             return ['success' => 'JSON succesfully saved! User '.$request->get('username').'.'];            
         }
