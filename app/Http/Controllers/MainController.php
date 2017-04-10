@@ -2,6 +2,9 @@
 namespace App\Http\Controllers;
 
 use App\User;
+use App\Temp;
+use App\History;
+use App\Helpers\Decryption;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
@@ -17,10 +20,15 @@ class MainController extends Controller
     public function json(Request $request)
     {
         $request->merge(['json' => json_encode($request->get('json'), $request->get('options'))]);
-
-        $this->validate($request, User::rules());
-        $response = User::authorization($request);
-        return json_encode($response);
+        $this->validate($request, User::rules()); //validation
+        $user_id = $request->user_id;
+        $json = Decryption::decrypt($request->get('json'), $request->get('options'));
+        History::create([
+            'user_id'  => $user_id,
+            'filename' => $json['filename'],
+            'structure'=> $json['json'],
+        ]);
+        return response()->json(['success' => 'JSON succesfully saved! User '.$request->get('username').'.']);
     }
 
     //

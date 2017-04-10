@@ -1,15 +1,34 @@
-<?php
+<?php 
 
-namespace App;
+namespace App\Helpers;
 
-use App\Helpers\Encryption;
-use Illuminate\Database\Eloquent\Model;
-
-class Temp extends Model
+class Decryption
 {
-    protected $table = 'temp';
+    /**
+     * List of encryption methods.
+     * 
+     * @return array
+     */
+    public static $ssl_methods = 
+    [
+        0  => 'AES-128-CBC',
+        1  => 'AES-192-CBC',
+        2  => 'AES-256-CBC',
+        3  => 'BF-CBC',
+        4  => 'CAST5-CBC',
+        5  => 'DES-CBC',
+        6  => 'DES-EDE-CBC',
+        7  => 'DES-EDE3-CBC',
+        8  => 'DESX-CBC',
+        9  => 'IDEA-CBC',
+        10 => 'RC2-40-CBC',
+        11 => 'RC2-64-CBC',
+        12 => 'RC2-CBC',
+        13 => 'RC4',
+        14 => 'RC4-40',
+    ];
 
-    protected $fillable = ['filename', 'method', 'hex_key', 'hex_iv', 'created_at', 'updated_at'];
+    protected static $hex_key = '1e4f5b283a2cd91a8ff95064f776d633';
 
     /**
      * Getting encrypted file structure, getting temp encrypting info 
@@ -23,14 +42,27 @@ class Temp extends Model
     {
         $array = json_decode($json, true);
         $structure = $array['array'];
-        $temp_id = $array['temp_id'];
-    	$temp = self::find($temp_id);
-        $method = $temp->method;
-        $key = hex2bin($temp->hex_key);
-        $iv = hex2bin($temp->hex_iv);
+        $hex_iv = $array['hex_iv'];
+        $method_id = $array['method_id'];
+        $method = self::$ssl_methods[$method_id];
+        $key = hex2bin(self::$hex_key);
+        $iv = hex2bin($hex_iv);
         self::decrypt_arr($structure, $method, $key, $iv);
-        $temp->delete();
-        return json_encode($structure, $options);
+        return ['json' => json_encode($structure, $options), 'filename' => $array['filename']];
+    }
+
+    /**
+     * Decoding string that was encoded by ssl method and return decoded value
+     *
+     * @param  string $safe   Encrypted string  
+     * @param  string $method Encryption method from $ssl_methods array 
+     * @param  string $key    Secret key for decryption 
+     * @param  string $iv     Initialization vector for decryption
+     * @return string         Decoded string
+     */
+    public static function decrypt_str($safe, $method, $key, $iv)
+    {
+        return openssl_decrypt($safe, $method, $key, 0, $iv);
     }
 
     /**
@@ -56,10 +88,10 @@ class Temp extends Model
                     $d_keys[$depth] = [];
                     $d_keys[$depth][$k] = '';
                 }
-                $arr[Encryption::decrypt($k, $method, $key, $iv)] = $d_arr;
+                $arr[self::decrypt_str($k, $method, $key, $iv)] = $d_arr;
                 unset($arr[$k]);
             } else {
-                $arr[$k] = Encryption::decrypt($v, $method, $key, $iv);
+                $arr[$k] = self::decrypt_str($v, $method, $key, $iv);
             }
         }
         return $arr;

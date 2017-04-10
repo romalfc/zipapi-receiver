@@ -15,4 +15,4 @@ $app->get('/', function () use ($app) {
     return $app->version();
 });
 
-$app->post('json', ['as' => 'json', 'uses' => 'MainController@json']);
+$app->post('json', ['as' => 'json', 'uses' => 'MainController@json', 'middleware' => ['json', 'auth']]);

@@ -47,16 +47,9 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
         )->first();
 
         if(is_null($user)){ 
-            return ['error' => 'Authorization failed!'];            
-        } else {                
-            if(is_null($request->get('filename'))) $request->merge(['filename' => 'file.zip']);
-            $json = Temp::decrypt($request->get('json'), $request->get('options'));
-            History::create([
-                'user_id'  => $user->id,
-                'filename' => $request->get('filename'),
-                'structure'=> $json,
-            ]);
-            return ['success' => 'JSON succesfully saved! User '.$request->get('username').'.'];            
+            return false;
+        } else {           
+            return $user->id;                 
         }
     }
 }
